@@ -4,6 +4,7 @@ import logging
 
 from pika import BasicProperties, ConnectionParameters, PlainCredentials
 from pika import BlockingConnection
+from pika.exceptions import AMQPError
 
 
 def get_routing_key(*args, **kwargs):
@@ -60,14 +61,26 @@ class ClientBase(object):
                  connection_attempts=3, heartbeat_interval=3600, virtual_host='/',
                  exchange='beer_garden'):
 
-        # The parameters needed for interacting with RabbitMQ
+        self._host = host
+        self._port = port
+        self._user = user
+        self._password = password
+        self._connection_attempts = connection_attempts
+        self._heartbeat_interval = heartbeat_interval
+        self._virtual_host = virtual_host
         self._exchange = exchange
-        self._conn_params = ConnectionParameters(host=host, port=port,
-                                                 connection_attempts=connection_attempts,
-                                                 virtual_host=virtual_host,
-                                                 heartbeat_interval=heartbeat_interval,
-                                                 credentials=PlainCredentials(username=user,
-                                                                              password=password))
+
+        # Just save off the connection params here so they don't need to be constructed every time
+        self._conn_params = self.connection_parameters
+
+    @property
+    def connection_parameters(self):
+        return ConnectionParameters(host=self._host, port=self._port,
+                                    connection_attempts=self._connection_attempts,
+                                    virtual_host=self._virtual_host,
+                                    heartbeat_interval=self._heartbeat_interval,
+                                    credentials=PlainCredentials(username=self._user,
+                                                                 password=self._password))
 
     @property
     def connection_url(self):
@@ -84,6 +97,16 @@ class TransientPikaClient(ClientBase):
     def __init__(self, **kwargs):
         super(TransientPikaClient, self).__init__(**kwargs)
         self.logger = logging.getLogger(__name__)
+
+    def is_alive(self):
+        try:
+            params = self.connection_parameters
+            params.connection_attempts = 1
+
+            with BlockingConnection(params) as conn:
+                return conn.is_open
+        except AMQPError:
+            return False
 
     def declare_exchange(self):
         with BlockingConnection(self._conn_params) as conn:
