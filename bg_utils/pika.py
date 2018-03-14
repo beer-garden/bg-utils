@@ -70,25 +70,42 @@ class ClientBase(object):
         self._virtual_host = virtual_host
         self._exchange = exchange
 
-        # Just save off the connection params here so they don't need to be constructed every time
-        self._conn_params = self.connection_parameters
-
-    @property
-    def connection_parameters(self):
-        return ConnectionParameters(host=self._host, port=self._port,
-                                    connection_attempts=self._connection_attempts,
-                                    virtual_host=self._virtual_host,
-                                    heartbeat_interval=self._heartbeat_interval,
-                                    credentials=PlainCredentials(username=self._user,
-                                                                 password=self._password))
+        # Save off the 'normal' connection params so they don't need to be constructed every time
+        self._conn_params = self.connection_parameters()
 
     @property
     def connection_url(self):
+        """str: Get the connection URL associated with this client's connection information"""
+
         return 'amqp://%s:%s@%s:%s/%s' % \
                (self._conn_params.credentials.username, self._conn_params.credentials.password,
                 self._conn_params.host,
                 self._conn_params.port,
                 '' if self._conn_params.virtual_host == '/' else self._conn_params.virtual_host)
+
+    def connection_parameters(self, **kwargs):
+        """Get ``ConnectionParameters`` associated with this client
+
+        Will construct a ``ConnectionParameters`` object using parameters passed at initialization
+        as defaults. Any parameters passed in \*\*kwargs will override initialization parameters.
+
+        Args:
+            **kwargs: Overrides for specific parameters
+
+        Returns:
+            :obj:`pika.ConnectionParameters`: Generated ConnectionParameters object
+        """
+        credentials = PlainCredentials(username=kwargs.get('user', self._user),
+                                       password=kwargs.get('password', self._password))
+
+        return ConnectionParameters(host=kwargs.get('host', self._host),
+                                    port=kwargs.get('port', self._port),
+                                    virtual_host=kwargs.get('virtual_host', self._virtual_host),
+                                    connection_attempts=kwargs.get('connection_attempts',
+                                                                   self._connection_attempts),
+                                    heartbeat_interval=kwargs.get('heartbeat_interval',
+                                                                  self._heartbeat_interval),
+                                    credentials=credentials)
 
 
 class TransientPikaClient(ClientBase):
@@ -100,10 +117,7 @@ class TransientPikaClient(ClientBase):
 
     def is_alive(self):
         try:
-            params = self.connection_parameters
-            params.connection_attempts = 1
-
-            with BlockingConnection(params) as conn:
+            with BlockingConnection(self.connection_parameters(connection_attempts=1)) as conn:
                 return conn.is_open
         except AMQPError:
             return False

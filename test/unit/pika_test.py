@@ -18,9 +18,12 @@ class ClientBaseTest(unittest.TestCase):
                                  password=self.password)
 
     def test_connection_parameters(self):
-        params = self.client.connection_parameters
-
+        params = self.client.connection_parameters()
         self.assertEqual(self.host, params.host)
+        self.assertEqual(self.port, params.port)
+
+        params = self.client.connection_parameters(host='another_host')
+        self.assertEqual('another_host', params.host)
         self.assertEqual(self.port, params.port)
 
     def test_connection_url(self):
