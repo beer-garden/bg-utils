@@ -111,6 +111,7 @@ def _ensure_roles():
             name="bg-plugin",
             description="Allows actions necessary for plugins to function",
             permissions=[
+                "bg-file-read",
                 "bg-instance-update",
                 "bg-job-create",
                 "bg-job-update",

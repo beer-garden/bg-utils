@@ -27,6 +27,7 @@ from mongoengine import (
     StringField,
     CASCADE,
     PULL,
+    FileField,
 )
 from mongoengine.errors import DoesNotExist
 
@@ -39,6 +40,7 @@ from brewtils.models import (
     Instance as BrewtilsInstance,
     Parameter as BrewtilsParameter,
     Request as BrewtilsRequest,
+    RequestFile as BrewtilsRequestFile,
     System as BrewtilsSystem,
     Event as BrewtilsEvent,
     Principal as BrewtilsPrincipal,
@@ -62,6 +64,7 @@ __all__ = [
     "Role",
     "RefreshToken",
     "Job",
+    "RequestFile",
     "RequestTemplate",
     "DateTrigger",
     "CronTrigger",
@@ -131,7 +134,7 @@ class Choices(EmbeddedDocument, BrewtilsChoices):
 
 
 class Parameter(EmbeddedDocument, BrewtilsParameter):
-    """Mongo-Backed BREWMASTER Parameter Object"""
+    """Mongo-Backed brewtils parameter object"""
 
     key = StringField(required=True)
     type = StringField(required=True, default="Any", choices=BrewtilsParameter.TYPES)
@@ -149,6 +152,7 @@ class Parameter(EmbeddedDocument, BrewtilsParameter):
         required=False, choices=BrewtilsParameter.FORM_INPUT_TYPES
     )
     parameters = ListField(EmbeddedDocumentField("Parameter"))
+    type_info = DictField(required=False)
 
     # If no display name was set, it will default it to the same thing as the key
     def __init__(self, *args, **kwargs):
@@ -258,6 +262,27 @@ class Instance(Document, BrewtilsInstance):
                 "Can not save Instance %s: Invalid status '%s' "
                 "provided." % (self.name, self.status)
             )
+
+
+class RequestFile(Document, BrewtilsRequestFile):
+    """Mongo backed request file resource"""
+
+    DEFAULT_CONTENT_TYPE = "application/octet-stream"
+    STORAGE_ENGINES = ["gridfs"]
+
+    content_type = StringField(required=True, default=DEFAULT_CONTENT_TYPE)
+    storage_type = StringField(required=True, default="gridfs")
+    filename = StringField(required=True)
+    external_link = StringField()
+    body = FileField()
+
+    @property
+    def fetch_id(self):
+        if self.external_link:
+            return self.external_link
+        elif self.body is not None:
+            return self.id
+        raise LookupError("No fetch id could be found")
 
 
 class Request(Document, BrewtilsRequest):
