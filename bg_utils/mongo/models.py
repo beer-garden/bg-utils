@@ -267,10 +267,8 @@ class Instance(Document, BrewtilsInstance):
 class RequestFile(Document, BrewtilsRequestFile):
     """Mongo backed request file resource"""
 
-    DEFAULT_CONTENT_TYPE = "application/octet-stream"
     STORAGE_ENGINES = ["gridfs"]
 
-    content_type = StringField(required=True, default=DEFAULT_CONTENT_TYPE)
     storage_type = StringField(required=True, default="gridfs")
     filename = StringField(required=True)
     external_link = StringField()
