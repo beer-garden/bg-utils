@@ -271,16 +271,7 @@ class RequestFile(Document, BrewtilsRequestFile):
 
     storage_type = StringField(required=True, default="gridfs")
     filename = StringField(required=True)
-    external_link = StringField()
-    body = FileField()
-
-    @property
-    def fetch_id(self):
-        if self.external_link:
-            return self.external_link
-        elif self.body is not None:
-            return self.id
-        raise LookupError("No fetch id could be found")
+    body = FileField(required=True)
 
 
 class Request(Document, BrewtilsRequest):
