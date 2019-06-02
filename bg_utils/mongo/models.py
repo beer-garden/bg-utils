@@ -264,16 +264,6 @@ class Instance(Document, BrewtilsInstance):
             )
 
 
-class RequestFile(Document, BrewtilsRequestFile):
-    """Mongo backed request file resource"""
-
-    STORAGE_ENGINES = ["gridfs"]
-
-    storage_type = StringField(required=True, default="gridfs")
-    filename = StringField(required=True)
-    body = FileField(required=True)
-
-
 class Request(Document, BrewtilsRequest):
     """Mongo-Backed BREWMASTER Request Object"""
 
@@ -421,6 +411,18 @@ class Request(Document, BrewtilsRequest):
             return Request.objects.get(id=system_id)
         except DoesNotExist:
             return None
+
+
+class RequestFile(Document, BrewtilsRequestFile):
+    """Mongo backed request file resource"""
+
+    STORAGE_ENGINES = ["gridfs"]
+
+    storage_type = StringField(required=True, default="gridfs")
+    filename = StringField(required=True)
+    body = FileField(required=True)
+    created_at = DateTimeField(default=datetime.datetime.utcnow, required=True)
+    request = ReferenceField("Request", reverse_delete_rule=CASCADE)
 
 
 class System(Document, BrewtilsSystem):
