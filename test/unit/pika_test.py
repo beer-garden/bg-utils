@@ -1,3 +1,4 @@
+import pika.spec
 import pytest
 from mock import ANY, MagicMock, Mock, PropertyMock, call
 from pika.exceptions import AMQPError
@@ -83,10 +84,18 @@ class TestTransientPikaClient(object):
         monkeypatch.setattr(bg_utils.pika, "BasicProperties", props_mock)
 
         client.publish(
-            message_mock, routing_key="queue_name", expiration=10, mandatory=True
+            message_mock,
+            routing_key="queue_name",
+            expiration=10,
+            mandatory=True,
+            delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE,
         )
         props_mock.assert_called_with(
-            app_id="beer-garden", content_type="text/plain", headers=None, expiration=10
+            app_id="beer-garden",
+            content_type="text/plain",
+            headers=None,
+            expiration=10,
+            delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE,
         )
         channel_mock.basic_publish.assert_called_with(
             exchange="beer_garden",
