@@ -705,9 +705,13 @@ class IntervalTrigger(EmbeddedDocument, BrewtilsIntervalTrigger):
     def get_scheduler_kwargs(self):
         """Get kwargs for schedulers version of this trigger."""
         tz = pytz.timezone(self.timezone)
-        start_date = tz.localize(self.start_date) if self.start_date else None
-        end_date = tz.localize(self.start_date) if self.start_date else None
-        kwargs = {"timezone": tz, "start_date": start_date, "end_date": end_date}
+
+        kwargs = {
+            "timezone": tz,
+            "start_date": tz.localize(self.start_date) if self.start_date else None,
+            "end_date": tz.localize(self.end_date) if self.end_date else None,
+        }
+
         for key in self.get_scheduler_attribute_names():
             if key in ["timezone", "start_date", "end_date"]:
                 continue
