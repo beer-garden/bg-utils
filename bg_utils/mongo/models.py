@@ -400,9 +400,9 @@ class Request(Document, BrewtilsRequest):
     def find_or_none(system_id):
         """Find a particular System
 
-         :param system_id: The ID of the system to search for
-         :return: The system with the given id, or None if system does not exist
-         """
+        :param system_id: The ID of the system to search for
+        :return: The system with the given id, or None if system does not exist
+        """
         try:
             return Request.objects.get(id=system_id)
         except DoesNotExist:
