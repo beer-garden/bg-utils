@@ -23,7 +23,7 @@ after_success: "codecov"
 jobs:
   include:
     - stage: lint
-      install: "pip install black flake8"
+      install: "pip install black==20.8b1 flake8==3.8.4"
       script: "make lint"
       after_success: skip
 
