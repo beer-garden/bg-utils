@@ -1,6 +1,6 @@
 
 # Runtime Dependencies
--e git+https://github.com/beer-garden/brewtils@develop#egg=brewtils
+brewtils < 3
 mongoengine < 0.16
 passlib < 1.8
 ruamel.yaml < 0.16
