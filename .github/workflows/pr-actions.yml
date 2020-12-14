@@ -8,7 +8,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ['2.7','3.7']
+        python-version: ['3.7']
         os: ['ubuntu-latest']
 
     name: Linting OS ${{ matrix.os }} - Python ${{ matrix.python-version }}
