@@ -27,6 +27,7 @@ from mongoengine import (
     StringField,
     CASCADE,
     PULL,
+    FileField,
 )
 from mongoengine.errors import DoesNotExist
 
@@ -39,6 +40,7 @@ from brewtils.models import (
     Instance as BrewtilsInstance,
     Parameter as BrewtilsParameter,
     Request as BrewtilsRequest,
+    RequestFile as BrewtilsRequestFile,
     System as BrewtilsSystem,
     Event as BrewtilsEvent,
     Principal as BrewtilsPrincipal,
@@ -62,6 +64,7 @@ __all__ = [
     "Role",
     "RefreshToken",
     "Job",
+    "RequestFile",
     "RequestTemplate",
     "DateTrigger",
     "CronTrigger",
@@ -131,7 +134,7 @@ class Choices(EmbeddedDocument, BrewtilsChoices):
 
 
 class Parameter(EmbeddedDocument, BrewtilsParameter):
-    """Mongo-Backed BREWMASTER Parameter Object"""
+    """Mongo-Backed brewtils parameter object"""
 
     key = StringField(required=True)
     type = StringField(required=True, default="Any", choices=BrewtilsParameter.TYPES)
@@ -149,6 +152,7 @@ class Parameter(EmbeddedDocument, BrewtilsParameter):
         required=False, choices=BrewtilsParameter.FORM_INPUT_TYPES
     )
     parameters = ListField(EmbeddedDocumentField("Parameter"))
+    type_info = DictField(required=False)
 
     # If no display name was set, it will default it to the same thing as the key
     def __init__(self, *args, **kwargs):
@@ -407,6 +411,18 @@ class Request(Document, BrewtilsRequest):
             return Request.objects.get(id=system_id)
         except DoesNotExist:
             return None
+
+
+class RequestFile(Document, BrewtilsRequestFile):
+    """Mongo backed request file resource"""
+
+    STORAGE_ENGINES = ["gridfs"]
+
+    storage_type = StringField(required=True, default="gridfs")
+    filename = StringField(required=True)
+    body = FileField(required=True)
+    created_at = DateTimeField(default=datetime.datetime.utcnow, required=True)
+    request = ReferenceField("Request", reverse_delete_rule=CASCADE)
 
 
 class System(Document, BrewtilsSystem):
